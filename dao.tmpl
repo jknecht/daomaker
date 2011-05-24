@@ -1,0 +1,257 @@
+
+import static org.apache.commons.lang.StringUtils.trim;
+
+#foreach( $type in $types )
+import ${type};
+#end
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.util.HashMap;
+
+import javax.sql.DataSource;
+
+import org.springframework.dao.EmptyResultDataAccessException;
+import org.springframework.jdbc.core.RowMapper;
+import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
+import org.springframework.jdbc.core.simple.SimpleJdbcTemplate;
+#if ( $table.hasLob() )
+import org.springframework.jdbc.support.lob.LobHandler;
+import org.springframework.jdbc.support.lob.DefaultLobHandler;
+#end
+
+/**
+ * Generated implementation of a data access object for table ${table.name}.
+ * The recommended usage for this object is to either extend or encapsulate
+ * it within another DAO instance in order to allow it to be regenerated
+ * at will.  Manual modification to this class' source code is discouraged. 
+ */
+public class Generated${table.objectName}Dao {
+	private NamedParameterJdbcTemplate namedParameterJdbcTemplate;
+	private SimpleJdbcTemplate simpleJdbcTemplate;
+#if ( $table.hasLob() )
+	private LobHandler lobHandler = new DefaultLobHandler();
+#end
+	
+	/**
+	 * Name of the table underlying this Dao.
+	 */
+	public static final String TABLE = "$table.name";
+	
+	/**
+	 * Comma-separated list of columns in this table.
+	 */
+	public static final String COLUMNS = "#foreach ($column in $table.columns)$column.name#if( $foreach.hasNext ), #end#end";
+	
+	/**
+	 * Select statement for retrieving records from this table.
+	 */
+	public static final String BASE_SELECT = "select " + COLUMNS + " from " + TABLE;
+	
+	/**
+	 * <p>Maps each record in a ResultSet to an instance of ${table.objectName}DTO.</p>
+	 * <p>Expects the following fields to be present:
+	 * <ul>
+#foreach ($column in $table.columns)
+	 *  <li>${column.name} (${column.shortPropertyType})
+#end
+	 * </ul>
+	 * </p>
+	 */
+	public static final RowMapper<${table.objectName}DTO> MAPPER = new RowMapper<${table.objectName}DTO>() {
+		public ${table.objectName}DTO mapRow(ResultSet rs, int counter) throws SQLException {
+			${table.objectName}DTO dto = new ${table.objectName}DTO();
+#foreach ($column in $table.columns)
+#if( ${column.lob} )
+#if( ${column.shortPropertyType} == "String" )
+			dto.set${column.getterName}(trim(lobHandler.getClobAsString(rs, "${column.name}")));
+#else
+			dto.set${column.getterName}(trim(lobHandler.getBlobAsBytes(rs, "${column.name}")));
+#end
+#else
+#if( ${column.shortPropertyType} == "String" )
+			dto.set${column.getterName}(trim(rs.get${column.shortPropertyType}("${column.name}")));
+#else
+			dto.set${column.getterName}(rs.get${column.shortPropertyType}("${column.name}"));
+#end
+#end
+#end
+			return dto;
+		}
+		
+	};
+	
+	/**
+	 * Constructor.
+	 * 
+	 * @param dataSource the DataSource to use for database connections.
+	 */
+	public Generated${table.objectName}Dao(DataSource dataSource) {
+		this.namedParameterJdbcTemplate = new NamedParameterJdbcTemplate(dataSource);
+		this.simpleJdbcTemplate = new SimpleJdbcTemplate(dataSource);
+	}
+
+#if ( $table.keyColumns.size() > 0 )
+	/**
+	 * Finds a single instance of ${table.objectName}DTO by its primary key.
+	 * If no instance matches the supplied parameters, then <code>NULL</code>
+	 * is returned.  If more than one instance is found, an exception is
+	 * thrown.
+	 *
+#foreach ($column in $table.keyColumns)
+	 * @param $column.propertyName May not be <code>NULL</code>
+#end
+	 * @returns The instance identified by the parameters, or <code>NULL</code> if no matching instance is found.
+	 * @throws IncorrectResultSizeDataAccessException if more than one result matches the supplied parameters.
+	 */ 
+	public ${table.objectName}DTO findByPk(#foreach ($column in $table.keyColumns)$column.shortPropertyType $column.propertyName#if( $foreach.hasNext ), #end#end) {
+		String sql = BASE_SELECT + " where #foreach ($column in $table.keyColumns)${column.name} = :${column.propertyName}#if( $foreach.hasNext ) and #end#end";
+		MapSqlParameterSource params = new MapSqlParameterSource();
+#foreach ($column in $table.keyColumns)
+		params.addValue("${column.propertyName}", ${column.propertyName});
+#end	
+		try {
+			return namedParameterJdbcTemplate.queryForObject(sql, params, MAPPER);
+		} catch (EmptyResultDataAccessException e) {
+			// this is ok.  It just means the thing you are looking for does not exist
+			return null;
+		}
+	}
+#end
+
+#foreach ($index in $table.indices)
+#if (!$index.primaryKey)
+#if ($index.unique)
+	/**
+	 * Finds a single instance of ${table.objectName}DTO matching the supplied
+	 * paramenters. If no matching instance is found, then <code>NULL</code>
+	 * is returned.  If more than one instance is found, an exception is
+	 * thrown.
+	 *
+#foreach ($column in $table.keyColumns)
+	 * @param $column.propertyName May not be <code>NULL</code>
+#end
+	 * @returns The instance identified by the parameters, or <code>NULL</code> if no matching instance is found.
+	 * @throws IncorrectResultSizeDataAccessException if more than one result matches the supplied parameters.
+	 */ 
+	public ${table.objectName}DTO findBy${index.objectName}(#foreach ($column in $index.columns)$column.shortPropertyType $column.propertyName#if( $foreach.hasNext ), #end#end) {
+		String sql = BASE_SELECT + " where #foreach ($column in $index.columns)${column.name} = :${column.propertyName}#if( $foreach.hasNext ) and #end#end";
+		MapSqlParameterSource params = new MapSqlParameterSource();
+#foreach ($column in $index.columns)
+		params.addValue("${column.propertyName}", ${column.propertyName});
+#end	
+		try {
+			return namedParameterJdbcTemplate.queryForObject(sql, params, MAPPER);
+		} catch (EmptyResultDataAccessException e) {
+			// this is ok.  It just means the thing you are looking for does not exist
+			return null;
+		}
+	}
+#else
+	/**
+	 * Returns a list of ${table.objectName}DTO instances matching the supplied
+	 * parameters. If no instance matches the supplied parameters, then an
+	 * empty list is returned.
+	 *
+#foreach ($column in $table.keyColumns)
+	 * @param $column.propertyName May not be <code>NULL</code>
+#end
+	 * @returns A list of matching ${table.objectName}DTO instances
+	 */ 
+	public List<${table.objectName}DTO> findBy${index.objectName}(#foreach ($column in $index.columns)$column.shortPropertyType $column.propertyName#if( $foreach.hasNext ), #end#end) {
+		String sql = BASE_SELECT + " where #foreach ($column in $index.columns)${column.name} = :${column.propertyName}#if( $foreach.hasNext ) and #end#end";
+		MapSqlParameterSource params = new MapSqlParameterSource();
+#foreach ($column in $index.columns)
+		params.addValue("${column.propertyName}", ${column.propertyName});
+#end	
+		return namedParameterJdbcTemplate.query(sql, params, MAPPER);
+	}
+#end
+#end
+#end
+
+	/**
+	 * Returns a list of all ${table.objectName}DTO instances.
+	 *
+	 * @returns a list of all ${table.objectName}DTO instances.
+	 */
+	public List<${table.objectName}DTO> findAll() {
+		return simpleJdbcTemplate.query(BASE_SELECT, MAPPER, null);  // passing null arguments to force the use of a PreparedStatement
+	}
+
+	/**
+	 * <p>Inserts the supplied ${table.objectName}DTO instance into the database.</p>
+	 * <p>The following properties are inserted:
+	 * <ul>
+#foreach ($column in $table.insertColumns)
+	 * <li>${column.propertyName}</li>
+#end
+	 * </ul>
+	 * </p>
+#if( $table.autoIncrementColumns.size() > 0 )
+	 * <p>The following properties are updated on the supplied dto with 
+	 * generated values from the database:
+	 * <ul>
+#foreach ($column in $table.autoIncrementColumns)
+	 * <li>${column.propertyName}</li>
+#end
+	 * </ul>
+	 * </p>
+#end
+	 *
+	 * @param dto The object to insert.
+	 * @returns The number of records inserted.
+	 */
+	public int insert(${table.objectName}DTO dto) {
+		String sql = "insert into ${table.name} " +
+			"(#foreach ($column in $table.insertColumns)$column.name#if( $foreach.hasNext ), #end#end)" +
+			" values " +
+			"(#foreach ($column in $table.insertColumns):$column.propertyName#if( $foreach.hasNext ), #end#end)";
+		
+		BeanPropertySqlParameterSource params = new BeanPropertySqlParameterSource(dto);
+#if( $table.autoIncrementColumns.size() > 0 )
+		GeneratedKeyHolder keyHolder = new GeneratedKeyHolder();
+		int updates = namedParameterJdbcTemplate.update(sql, params, keyHolder);
+		Map<String,Object> keys = keyHolder.getKeys();
+#foreach ($column in $table.autoIncrementColumns)
+		dto.set${column.getterName}(($column.shortPropertyType) keys.get("$column.name"));
+#end
+		return updates;
+#else
+		return updates = namedParameterJdbcTemplate.update(sql, params);
+#end
+			
+	}
+
+	/**
+	 * <p>Updates the supplied ${table.objectName}DTO instance in the database.</p>
+	 * <p>The following properties are updated:
+	 * <ul>
+#foreach ($column in $table.updateColumns)
+	 * <li>${column.propertyName}</li>
+#end
+	 * </ul>
+	 * </p>
+	 * <p>The following properties are used to identify the record in the database:
+	 * <ul>
+#foreach ($column in $table.keyColumns)
+	 * <li>${column.propertyName}</li>
+#end
+	 * </ul>
+	 * </p>
+	 *
+	 * @param dto The object to update.
+	 * @returns The number of records updated.
+	 */
+	public int update(${table.objectName}DTO dto) {
+		String sql = "update ${table.name} set " +
+#foreach ($column in $table.updateColumns)
+			"${column.name} = :${column.propertyName}#if( $foreach.hasNext ),#end " +
+#end
+			"where #foreach ($column in $table.keyColumns)${column.name} = :${column.propertyName}#if( $foreach.hasNext ) and #end #end";
+		
+		BeanPropertySqlParameterSource params = new BeanPropertySqlParameterSource(dto);
+		return namedParameterJdbcTemplate.update(sql, params);
+	}
+
+
+}

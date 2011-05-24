@@ -1,0 +1,66 @@
+#foreach( $type in $types )
+import ${type};
+#end
+
+/**
+ * Data transfer object representing data in the 
+ * table ${table.name}
+ */
+public class ${table.objectName}DTO {
+#foreach( $column in $table.columns )
+	private $column.shortPropertyType ${column.propertyName};  // $column.name
+#end
+
+#foreach( $column in $table.columns )
+	/**
+	 * Returns the value from the column $column.name
+	 */
+	private $column.shortPropertyType get${column.getterName}() {
+		return this.$column.propertyName;
+	}
+	
+	/**
+	 * Sets the value for the column $column.name
+	 */
+	private void set${column.getterName}($column.shortPropertyType value) {
+		this.$column.propertyName = value;
+	}
+	
+#end
+
+	@Override
+	public int hashCode() {
+		final int prime = 31;
+		int result = 1;
+#foreach( $column in $table.columns )
+		result = prime * result + ((${column.propertyName} == null) ? 0 : ${column.propertyName}.hashCode());
+#end
+		return result;
+	}
+
+	@Override
+	public boolean equals(Object obj) {
+		if (this == obj) {
+			return true;
+		}
+		if (obj == null) {
+			return false;
+		}
+		if (!(obj instanceof ${table.objectName}DTO)) {
+			return false;
+		}
+		${table.objectName}DTO other = (${table.objectName}DTO) obj;
+#foreach( $column in $table.columns )
+		if (this.${column.propertyName} == null) {
+			if (other.${column.propertyName} != null) {
+				return false;
+			}
+		} else if (!this.${column.propertyName}.equals(other.${column.propertyName})) {
+			return false;
+		}
+#end
+		return true;
+	}
+
+
+}

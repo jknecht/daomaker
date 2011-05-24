@@ -1,0 +1,24 @@
+Generates DTO's and DAO's from the database connection.
+
+Generated files are placed in a directory named "output".
+
+You must create a file named "connection.properties" and place it in the
+application's root directory.  The following properties must be defined:
+
+driver
+url
+username
+password
+tables
+
+The following is an example using IBM informix:
+----
+driver=com.informix.jdbc.IfxDriver
+url=jdbc:informix-sqli://localhost:9088/appdb:INFORMIXSERVER=ol_informix1170;DB_LOCALE=en_us.utf8
+username=appdbuser
+password=appdbpassword
+tables=%
+
+You can restrict which tables are used by changing the "tables" specification.
+For example "app%" would only use the tables starting with the characters "app".
+
