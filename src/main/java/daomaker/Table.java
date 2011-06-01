@@ -86,6 +86,7 @@ public class Table {
 	}
 
 	public void addKey(Column column) {
+		column.setPrimaryKey(true);
 		this.keyColumns.add(column);
 	}
 

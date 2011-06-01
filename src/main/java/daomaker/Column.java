@@ -19,7 +19,20 @@ public class Column {
 	private String typeName;
 	private String remarks;
 	private boolean autoIncrement;
+	private boolean primaryKey;
 	
+	/**
+	 * @return the primaryKey
+	 */
+	public boolean isPrimaryKey() {
+		return primaryKey;
+	}
+	/**
+	 * @param primaryKey the primaryKey to set
+	 */
+	public void setPrimaryKey(boolean primaryKey) {
+		this.primaryKey = primaryKey;
+	}
 	/**
 	 * @return the lob
 	 */

@@ -1,3 +1,7 @@
+package hyatt.eas.dao.envision;
+
+import com.jeffknecht.dynadao.annotation.Table;
+import com.jeffknecht.dynadao.annotation.Column;
 #foreach( $type in $types )
 import ${type};
 #end
@@ -6,8 +10,10 @@ import ${type};
  * Data transfer object representing data in the 
  * table ${table.name}
  */
+ @Table("${table.name}")
 public class ${table.objectName}DTO {
 #foreach( $column in $table.columns )
+	@Column(#if (${column.lob} || ${column.primaryKey} || ${column.autoIncrement})value=#end"${column.name}"#if (${column.lob}), type=Types.CLOB#end#if (${column.primaryKey}), primaryKey=true#end#if (${column.autoIncrement}), autoIncrement=true#end)
 	private $column.shortPropertyType ${column.propertyName};  // $column.name
 #end
 
@@ -15,14 +21,14 @@ public class ${table.objectName}DTO {
 	/**
 	 * Returns the value from the column $column.name
 	 */
-	private $column.shortPropertyType get${column.getterName}() {
+	public $column.shortPropertyType get${column.getterName}() {
 		return this.$column.propertyName;
 	}
 	
 	/**
 	 * Sets the value for the column $column.name
 	 */
-	private void set${column.getterName}($column.shortPropertyType value) {
+	public void set${column.getterName}($column.shortPropertyType value) {
 		this.$column.propertyName = value;
 	}
 	
